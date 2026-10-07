@@ -1,0 +1,1686 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Xpense Tracker</title>
+<!-- SNAPSHOT TAG: XPENSE-V2 · build 2026-08-12 -->
+<style>
+/* ============================================================
+   1. DESIGN TOKENS
+   ============================================================ */
+:root{
+  /* Colours are taken straight from the logo: #00B050 green, #0070C0 blue. */
+  --bg:#ffffff;
+  --surface:#ffffff;
+  --surface-2:#ffffff;
+  --line:#cfe1ee;
+  --ink:#0a3a5e;        /* body text — deep logo blue */
+  --ink-2:#3d7ba6;      /* labels */
+  --ink-3:#7ba6c2;      /* quiet text */
+  --accent:#0070C0;     /* logo blue */
+  --accent-soft:#ffffff;
+  --green:#00B050;      /* logo green */
+  --green-soft:#e4f7ec;
+  --red:#00528f;        /* destructive actions stay in the logo family */
+  --radius-lg:16px;
+  --radius-md:12px;
+  --radius-sm:9px;
+  --shadow:none;
+  /* One family throughout. Only size and weight vary — never slant. */
+  --font:"Tw Cen MT","Tw Cen MT Std","Twentieth Century","Century Gothic",Futura,
+         "Questrial",Helvetica,Arial,sans-serif;
+}
+*{box-sizing:border-box}
+html,body{margin:0;padding:0}
+body{
+  background:var(--bg);color:var(--ink);font-family:var(--font);
+  font-size:17px;line-height:1.45;-webkit-font-smoothing:antialiased;
+  padding-bottom:120px;
+}
+button,input,select,textarea{font-family:inherit;font-size:17px;color:inherit}
+button{cursor:pointer}
+a{color:var(--accent)}
+
+/* ============================================================
+   2. LAYOUT SHELL
+   ============================================================ */
+.wrap{max-width:1080px;margin:0 auto;padding:22px 20px 0;
+  padding-left:max(20px,env(safe-area-inset-left));padding-right:max(20px,env(safe-area-inset-right))}
+body{padding-bottom:calc(120px + env(safe-area-inset-bottom))}
+.tabbar{bottom:calc(18px + env(safe-area-inset-bottom))}
+@media(max-width:520px){
+  .tabbar{left:12px;right:12px;transform:none;justify-content:space-between}
+  .tabbar button{min-width:0;flex:1;padding:8px 4px}
+  .wrap{padding-top:16px}
+  h1{font-size:31px}
+  .brand img{width:210px}
+}
+.brand{display:flex;align-items:center;justify-content:space-between;gap:16px;flex-wrap:wrap;
+  padding-bottom:14px;border-bottom:2px solid var(--line);margin-bottom:16px}
+.brand img{width:270px;max-width:62vw;height:auto;display:block}
+.page-head{display:flex;align-items:flex-end;justify-content:space-between;gap:16px;flex-wrap:wrap;margin-bottom:18px}
+h1{font-size:38.5px;letter-spacing:0;font-weight:700;margin:0;color:var(--accent)}
+.balance-chip{
+  display:flex;flex-direction:column;align-items:flex-end;gap:2px;
+  background:#fff;border:1px solid var(--line);border-radius:var(--radius-md);padding:9px 14px;min-width:186px;
+}
+.balance-chip .lbl{font-size:12.5px;text-transform:uppercase;letter-spacing:.6px;color:var(--ink-3);font-weight:700}
+.balance-chip .val{font-size:22.5px;font-weight:700;letter-spacing:-.4px;color:var(--green)}
+.view{display:none}
+.view.is-active{display:block}
+
+/* cards */
+.card{background:#fff;border:1px solid var(--line);border-radius:var(--radius-lg);padding:16px}
+.card + .card{margin-top:14px}
+.card-label{font-size:13.5px;font-weight:700;color:var(--ink-2);display:flex;align-items:center;gap:6px;margin-bottom:8px;text-transform:uppercase;letter-spacing:.4px}
+.section-label{font-size:14.5px;font-weight:700;color:var(--accent);margin:22px 0 8px;text-transform:uppercase;letter-spacing:.4px}
+.grid-2{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+.grid-3{display:grid;grid-template-columns:repeat(3,1fr);gap:14px}
+.grid-4{display:grid;grid-template-columns:repeat(4,1fr);gap:14px}
+.card-head{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;margin-bottom:10px}
+.seg-sm{flex:none;width:auto}
+.seg-sm button{padding:5px 12px;font-size:13.5px}
+.sub-txt{font-size:14.5px;color:var(--ink-2);font-weight:600}
+.row.child{padding-left:30px;border-bottom:1px solid var(--line)}
+.row.child .t1{font-size:15px;font-weight:600}
+.ic.small{width:28px;height:28px;font-size:13px}
+.row .t2{line-height:1.35}
+@media(max-width:980px){.grid-4{grid-template-columns:1fr 1fr}}
+@media(max-width:760px){.grid-2,.grid-3,.grid-4{grid-template-columns:1fr}}
+
+/* ============================================================
+   3. CONTROLS
+   ============================================================ */
+.seg{display:flex;background:#fff;border:1px solid var(--line);border-radius:11px;padding:3px;gap:3px}
+.seg button{
+  flex:1;border:0;background:transparent;border-radius:8px;padding:7px 10px;
+  font-size:15.5px;font-weight:650;color:var(--ink-2);transition:.15s;
+}
+.seg button.is-on{background:var(--accent);color:#fff}
+.field{display:block;margin-top:12px}
+.field .k{font-size:13.5px;font-weight:700;color:var(--ink-2);display:block;margin-bottom:5px}
+input[type=text],input[type=number],input[type=date],input[type=search],select,textarea{
+  width:100%;border:1px solid var(--line);background:#fff;border-radius:var(--radius-sm);
+  padding:10px 12px;outline:0;transition:.15s;
+}
+input:focus,select:focus,textarea:focus{border-color:var(--accent);outline:2px solid var(--accent);outline-offset:1px}
+.amount-row input{color:var(--accent)}
+textarea{resize:vertical;min-height:64px}
+.amount-row{display:flex;align-items:center;gap:8px}
+.amount-row .cur{font-size:34px;font-weight:400;color:var(--ink-3)}
+.amount-row input{
+  border:0;background:transparent;font-size:38.5px;font-weight:700;letter-spacing:-1px;padding:0;
+}
+.amount-row input:focus{outline:none}
+.chips{display:flex;flex-wrap:wrap;gap:7px}
+.chip{max-width:100%;text-align:left}
+#taxonomy .t2{white-space:normal;font-size:13px}
+.chip{
+  border:1px solid var(--line);background:#fff;border-radius:20px;padding:8px 14px;
+  font-size:14.5px;font-weight:600;display:inline-flex;align-items:center;gap:6px;transition:.15s;
+}
+.chip:hover{border-color:var(--ink-3)}
+.chip.is-on{background:var(--accent);border-color:var(--accent);color:#fff}
+.chip.is-on.mode-cash,.chip.is-on.mode-card{background:var(--green);border-color:var(--green)}
+.btn{
+  border:0;border-radius:var(--radius-md);padding:13px 18px;font-weight:700;font-size:17px;
+  background:var(--accent);color:#fff;width:100%;transition:.15s;
+}
+.btn:hover{filter:brightness(1.06)}
+.btn.ghost{background:#fff;color:var(--ink);border:1px solid var(--line)}
+.btn.danger{background:#fff;color:var(--red);border:1px solid var(--line)}
+.btn.sm{width:auto;padding:9px 14px;font-size:15.5px}
+.check{display:flex;align-items:center;gap:9px;margin-top:12px;font-size:15.5px;font-weight:600;color:var(--ink-2)}
+.check input{width:17px;height:17px;accent-color:var(--accent);flex:none}
+.hint{font-size:13.5px;color:var(--ink-3);margin-top:8px}
+.hint strong{color:var(--ink-2)}
+.inline{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+
+/* ============================================================
+   4. TABS (floating bar)
+   ============================================================ */
+.tabbar{
+  position:fixed;left:50%;transform:translateX(-50%);bottom:18px;z-index:40;
+  display:flex;gap:4px;background:#fff;border:1px solid var(--line);border-radius:22px;
+  padding:6px;
+}
+.tabbar button{
+  border:0;background:transparent;border-radius:17px;padding:8px 16px;
+  display:flex;flex-direction:column;align-items:center;gap:2px;
+  font-size:12.5px;font-weight:650;color:var(--ink-3);min-width:84px;transition:.15s;
+}
+.tabbar button svg{width:20px;height:20px;stroke:currentColor;fill:none;stroke-width:1.9;stroke-linecap:round;stroke-linejoin:round}
+.tabbar button.is-on{background:var(--accent);color:#fff}
+
+/* ============================================================
+   5. LISTS / TABLE
+   ============================================================ */
+.list{background:#fff;border:1px solid var(--line);border-radius:var(--radius-lg);overflow:hidden}
+.row{display:flex;align-items:center;gap:12px;padding:11px 14px;border-bottom:1px solid var(--line)}
+.row:last-child{border-bottom:0}
+.ic{
+  width:38px;height:38px;border-radius:9px;display:grid;place-items:center;font-size:18px;flex:none;
+  background:#fff;border:1px solid currentColor;
+}
+.row .main{flex:1;min-width:0}
+.row .t1{font-weight:650;font-size:16.5px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.row .t2{font-size:13.5px;color:var(--ink-3);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.row .amt{font-weight:700;font-size:17px;text-align:right;flex:none}
+.row .amt .pct{display:block;font-size:12.5px;color:var(--ink-3);font-weight:600}
+.amt.in{color:var(--green)}
+table{width:100%;border-collapse:collapse;background:#fff;border:1px solid var(--line);border-radius:var(--radius-lg);overflow:hidden}
+th{
+  text-align:left;font-size:12.5px;letter-spacing:.5px;text-transform:uppercase;color:var(--ink-3);
+  font-weight:700;padding:12px 13px;border-bottom:1px solid var(--line);white-space:nowrap;
+}
+td{padding:12px 13px;border-bottom:1px solid var(--line);font-size:16px;vertical-align:middle}
+tr:last-child td{border-bottom:0}
+td.num{text-align:right;font-weight:700;white-space:nowrap}
+.tag{display:inline-flex;align-items:center;gap:6px;font-weight:600;white-space:nowrap}
+.dot{width:9px;height:9px;border-radius:50%;flex:none}
+.mode-pill{font-size:13px;font-weight:700;background:#fff;border:1px solid var(--line);padding:2px 8px;border-radius:20px;white-space:nowrap}
+.x{border:0;background:transparent;color:var(--ink-3);font-size:18px;padding:2px 6px;border-radius:6px}
+.x:hover{color:var(--accent)}
+.empty{text-align:center;color:var(--ink-3);padding:40px 20px;font-size:16px}
+@media(max-width:760px){
+  .table-wrap thead{display:none}
+  .table-wrap tr{display:block;border-bottom:1px solid var(--line);padding:6px 2px}
+  .table-wrap td{display:flex;justify-content:space-between;gap:14px;border:0;padding:4px 12px}
+  .table-wrap td::before{content:attr(data-k);font-size:13.5px;color:var(--ink-3);font-weight:650}
+  .table-wrap td.num{text-align:right}
+}
+
+/* ============================================================
+   6. CHARTS
+   ============================================================ */
+.chart-wrap{display:flex;align-items:center;gap:20px;flex-wrap:wrap;justify-content:center}
+.donut-mid .n{font-size:29.5px;font-weight:700;letter-spacing:-.5px;fill:var(--accent)}
+.donut-mid .s{font-size:12.5px;fill:var(--ink-3);font-weight:650}
+.legend{display:grid;gap:6px;flex:1;min-width:210px}
+.legend div{display:flex;align-items:center;gap:8px;font-size:14.5px}
+.legend .nm{flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.legend .vl{font-weight:700}
+.bars{display:flex;align-items:flex-end;gap:4px;height:150px;padding-top:8px}
+.bars .b{flex:1;display:flex;flex-direction:column;justify-content:flex-end;align-items:center;gap:5px;min-width:0}
+.bars .b i{display:block;width:100%;max-width:46px;background:linear-gradient(180deg,var(--green),var(--accent));border-radius:5px 5px 3px 3px;min-height:2px}
+.bars .b span{font-size:11.5px;color:var(--ink-3);font-weight:650;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100%}
+.bars .b.zero i{background:var(--line)}
+
+/* stat cards */
+.stat{background:#fff;border:1px solid var(--line);border-radius:var(--radius-lg);padding:16px;text-align:center}
+.stat .k{font-size:13.5px;font-weight:700;color:var(--ink-2);text-transform:uppercase;letter-spacing:.4px}
+.stat .v{font-size:31.5px;font-weight:700;letter-spacing:-.8px;margin-top:2px;color:var(--accent)}
+.stat .s{font-size:13px;color:var(--ink-3);font-weight:600}
+.stat.v-green .v{color:var(--green)}
+
+/* period nav */
+.pnav{display:flex;align-items:center;justify-content:space-between;margin:2px 0 12px}
+.pnav b{font-size:20.5px;font-weight:700;color:var(--accent)}
+.pnav small{display:block;font-size:13px;color:var(--ink-3);font-weight:600;text-align:center}
+.pnav button{border:0;background:transparent;color:var(--accent);font-size:22.5px;padding:4px 14px;border-radius:8px}
+.pnav button:disabled{color:var(--ink-3);opacity:.4;cursor:not-allowed}
+
+/* toast */
+#toast{
+  border:1px solid var(--accent);
+  position:fixed;left:50%;bottom:96px;transform:translate(-50%,14px);z-index:60;
+  background:var(--accent);color:#fff;padding:10px 16px;border-radius:22px;font-size:15.5px;font-weight:600;
+  opacity:0;pointer-events:none;transition:.22s;
+}
+#toast.show{opacity:1;transform:translate(-50%,0)}
+@media (prefers-reduced-motion:reduce){*{transition:none!important}}
+:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+</style>
+</head>
+<body>
+
+<div class="wrap">
+  <header class="brand">
+    <img id="brandLogo" alt="Xpense Tracker">
+    <div class="balance-chip">
+      <span class="lbl">Bank balance</span>
+      <span class="val" id="hdrBalance">₹0</span>
+    </div>
+  </header>
+
+  <div class="page-head">
+    <h1 id="pageTitle">Add expense</h1>
+  </div>
+
+  <!-- ============ ADD ============ -->
+  <section class="view is-active" id="view-add">
+    <div class="seg" id="typeSeg">
+      <button data-type="expense" class="is-on">Money out</button>
+      <button data-type="income">Money in</button>
+    </div>
+
+    <div class="card" style="margin-top:14px">
+      <div class="card-label">₹ Amount</div>
+      <div class="amount-row">
+        <span class="cur">₹</span>
+        <input id="fAmount" type="number" inputmode="decimal" min="0" step="0.01" placeholder="0" autocomplete="off">
+      </div>
+    </div>
+
+    <div class="card">
+      <label class="field" style="margin-top:0">
+        <span class="k">Details / notes</span>
+        <input id="fNotes" type="text" placeholder="e.g. Blinkit weekly groceries" autocomplete="off">
+      </label>
+      <div class="hint" id="suggestBox" style="display:none"></div>
+
+      <label class="field">
+        <span class="k">Category</span>
+        <input id="fCategory" type="text" list="catList" placeholder="Type or pick one below" autocomplete="off">
+      </label>
+      <datalist id="catList"></datalist>
+      <div class="chips" id="catChips" style="margin-top:8px"></div>
+
+      <div id="subWrap" style="display:none">
+        <label class="field">
+          <span class="k">Sub-category</span>
+          <input id="fSub" type="text" list="subList" placeholder="Pick one below or type your own" autocomplete="off">
+        </label>
+        <datalist id="subList"></datalist>
+        <div class="chips" id="subChips" style="margin-top:8px"></div>
+      </div>
+
+      <label class="field" id="otherWrap" style="display:none">
+        <span class="k">Specify (Other)</span>
+        <input id="fOther" type="text" placeholder="What was this for?" autocomplete="off">
+      </label>
+    </div>
+
+    <div class="card">
+      <div class="card-label">Payment mode</div>
+      <div class="chips" id="modeChips"></div>
+
+      <div id="cardWrap" style="display:none">
+        <div class="k" style="margin:12px 0 5px">Which card</div>
+        <div class="chips" id="cardChips"></div>
+      </div>
+
+      <label class="field" id="modeDetailWrap" style="display:none">
+        <span class="k">Payment details</span>
+        <input id="fModeDetail" type="text" placeholder="e.g. Paytm wallet, gift card, paid by a friend" autocomplete="off">
+      </label>
+
+      <label class="check" id="bankEffectWrap" style="display:none">
+        <input type="checkbox" id="fBankEffect">
+        <span>This money left or entered a bank account</span>
+      </label>
+
+      <label class="field" id="bankWrap">
+        <span class="k" id="bankLabel">Bank account</span>
+        <select id="fBank"></select>
+      </label>
+
+      <label class="field">
+        <span class="k">Date</span>
+        <input id="fDate" type="date">
+      </label>
+
+      <div class="hint" id="effectHint"></div>
+    </div>
+
+    <div style="margin-top:14px"><button class="btn" id="saveBtn">Add expense</button></div>
+  </section>
+
+  <!-- ============ HISTORY ============ -->
+  <section class="view" id="view-history">
+    <div class="card">
+      <label class="field" style="margin-top:0">
+        <span class="k">Search everything</span>
+        <input id="qSearch" type="search" placeholder="Amount, note, category, mode, bank…" autocomplete="off">
+      </label>
+      <div class="grid-4" style="margin-top:12px">
+        <label class="field" style="margin-top:0">
+          <span class="k">Category</span>
+          <select id="qCategory"></select>
+        </label>
+        <label class="field" style="margin-top:0">
+          <span class="k">Sub-category</span>
+          <select id="qSub"></select>
+        </label>
+        <label class="field" style="margin-top:0">
+          <span class="k">Payment mode</span>
+          <select id="qMode"></select>
+        </label>
+        <label class="field" style="margin-top:0">
+          <span class="k">Period</span>
+          <select id="qRange">
+            <option value="all">All time</option>
+            <option value="7">Last 7 days</option>
+            <option value="30">Last 30 days</option>
+            <option value="90">Last 90 days</option>
+            <option value="365">Last 12 months</option>
+          </select>
+        </label>
+      </div>
+      <div class="inline" style="margin-top:12px">
+        <button class="btn ghost sm" id="csvBtn">Export CSV</button>
+        <span class="hint" id="qCount" style="margin:0"></span>
+      </div>
+    </div>
+
+    <div class="section-label">Transactions</div>
+    <div class="table-wrap" id="txnTable"></div>
+  </section>
+
+  <!-- ============ SUMMARY ============ -->
+  <section class="view" id="view-summary">
+    <div class="pnav">
+      <button id="prevP" aria-label="Previous period">‹</button>
+      <div><b id="pLabel">—</b><small id="pSub"></small></div>
+      <button id="nextP" aria-label="Next period">›</button>
+    </div>
+    <div class="seg" id="periodSeg">
+      <button data-p="day">Daily</button>
+      <button data-p="week">Weekly</button>
+      <button data-p="month" class="is-on">Monthly</button>
+      <button data-p="quarter">Quarterly</button>
+      <button data-p="year">Yearly</button>
+    </div>
+
+    <div class="grid-3" style="margin-top:14px">
+      <div class="stat"><div class="k">Total spent</div><div class="v" id="sSpent">₹0</div><div class="s" id="sCount">0 transactions</div></div>
+      <div class="stat v-green"><div class="k">Money in</div><div class="v" id="sIn">₹0</div><div class="s" id="sInCount">0 credits</div></div>
+      <div class="stat"><div class="k">Bank balance</div><div class="v" id="sBal">₹0</div><div class="s" id="sBalSub">across accounts</div></div>
+    </div>
+
+    <div class="card" style="margin-top:14px">
+      <div class="card-head">
+        <div class="card-label" style="margin:0">Breakdown</div>
+        <div class="seg seg-sm" id="levelSeg">
+          <button data-l="cat" class="is-on">By category</button>
+          <button data-l="sub">By sub-category</button>
+          <button data-l="mode">By payment mode</button>
+        </div>
+      </div>
+      <div class="chart-wrap" id="donutWrap"></div>
+    </div>
+
+    <div class="card">
+      <div class="card-label" id="trendLabel">Trend</div>
+      <div class="bars" id="bars"></div>
+    </div>
+
+    <div class="section-label">By category</div>
+    <div class="list" id="catList2"></div>
+  </section>
+
+  <!-- ============ SETTINGS ============ -->
+  <section class="view" id="view-settings">
+    <div class="section-label" style="margin-top:0">Bank accounts</div>
+    <div class="list" id="acctList"></div>
+    <div class="card" style="margin-top:14px">
+      <div class="card-label">Add an account</div>
+      <div class="grid-2">
+        <input id="newAcctName" type="text" placeholder="Account name (e.g. HDFC Savings)">
+        <input id="newAcctBal" type="number" step="0.01" placeholder="Current balance">
+      </div>
+      <div style="margin-top:10px"><button class="btn ghost sm" id="addAcctBtn">Add account</button></div>
+      <div class="hint">Editing a balance sets a new starting point. Entries added afterwards adjust it automatically — UPI, Netbanking and ATM withdrawals reduce it, credits increase it. Card and cash spending never touches it.</div>
+    </div>
+
+    <div class="section-label">Credit cards</div>
+    <div class="list" id="cardList"></div>
+    <div class="card" style="margin-top:14px">
+      <div class="inline">
+        <input id="newCard" type="text" placeholder="Card name (e.g. Amex Platinum)" style="flex:1;min-width:190px">
+        <button class="btn ghost sm" id="addCardBtn">Add card</button>
+      </div>
+      <div class="hint">Card spending never touches your bank balance — it shows as its own
+        slice under Summary → Breakdown → By payment mode.</div>
+    </div>
+
+    <div class="section-label">Custom sub-categories</div>
+    <div class="card">
+      <div class="grid-2">
+        <select id="newSubParent"></select>
+        <input id="newSub" type="text" placeholder="New sub-category name">
+      </div>
+      <div style="margin-top:10px"><button class="btn ghost sm" id="addSubBtn">Add sub-category</button></div>
+      <div class="chips" id="customSubs" style="margin-top:12px"></div>
+      <div class="hint">Anything you type by hand when adding an entry is saved here automatically.</div>
+    </div>
+
+    <div class="section-label">Category reference</div>
+    <div class="list" id="taxonomy"></div>
+
+    <div class="section-label">Your data</div>
+    <div class="card">
+      <div class="inline">
+        <button class="btn ghost sm" id="exportBtn">Export JSON backup</button>
+        <button class="btn ghost sm" id="importBtn">Import JSON backup</button>
+        <button class="btn ghost sm" id="csvBtn2">Export CSV for Excel</button>
+        <input id="importFile" type="file" accept="application/json" hidden>
+      </div>
+      <div class="hint">Everything lives in this browser's local storage. Export a JSON file to keep a copy or move it to another machine.</div>
+    </div>
+
+    <div class="card">
+      <button class="btn danger" id="wipeBtn">Delete all data</button>
+      <div class="hint">Removes every entry, account and custom category from this browser. This cannot be undone.</div>
+    </div>
+
+    <div class="section-label">About</div>
+    <div class="list">
+      <div class="row"><div class="main"><div class="t1">Storage</div><div class="t2">localStorage key: expense-tracker-v1</div></div></div>
+      <div class="row"><div class="main"><div class="t1">Version</div><div class="t2">XPENSE-V2 · build 2026-08-12</div></div></div>
+    </div>
+  </section>
+</div>
+
+<!-- ============ TAB BAR ============ -->
+<nav class="tabbar" id="tabbar">
+  <button data-view="add" class="is-on"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 8v8M8 12h8"/></svg>Add</button>
+  <button data-view="history"><svg viewBox="0 0 24 24"><rect x="4" y="4" width="16" height="16" rx="3"/><path d="M8 9h8M8 13h8M8 17h5"/></svg>History</button>
+  <button data-view="summary"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg>Summary</button>
+  <button data-view="settings"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19 12a7 7 0 0 0-.1-1.2l2-1.5-2-3.4-2.3 1a7 7 0 0 0-2-1.2L14.2 3H9.8l-.4 2.7a7 7 0 0 0-2 1.2l-2.3-1-2 3.4 2 1.5A7 7 0 0 0 5 12c0 .4 0 .8.1 1.2l-2 1.5 2 3.4 2.3-1c.6.5 1.3.9 2 1.2l.4 2.7h4.4l.4-2.7c.7-.3 1.4-.7 2-1.2l2.3 1 2-3.4-2-1.5c.1-.4.1-.8.1-1.2Z"/></svg>Settings</button>
+</nav>
+
+<div id="toast"></div>
+
+<script>
+"use strict";
+/* ==================================================================
+   XPENSE TRACKER — single file app
+   A) Taxonomy  B) Store + migration  C) Helpers  D) Balance
+   E) Add view  F) History  G) Summary  H) Settings  I) Charts  J) Boot
+   Extension points are marked with  // HOOK:
+   ================================================================== */
+
+/* ---------- A. TAXONOMY ------------------------------------------ */
+/* Each category holds its own sub-categories. Add a line here and it
+   appears everywhere: entry chips, filters, charts and exports.      */
+
+const TAXONOMY = [
+  {name:"Housing", icon:"🏠", color:"#00702F", subs:[
+    "Rent or home loan EMI","Maintenance / society charges","Property tax","Repairs, furnishing, appliances"]},
+  {name:"Utilities", icon:"💡", color:"#00B050", subs:[
+    "Electricity (BESCOM)","Water","Piped gas / LPG cylinder","Broadband","Mobile recharge","DTH",
+    "Cook, maid, driver, security"]},
+  {name:"Food & Groceries", icon:"🛒", color:"#0A8F3C", subs:[
+    "Kirana / supermarket","Online grocery (BigBasket, Blinkit, Zepto)","Milk, vegetables, fruits",
+    "Eating out","Food delivery (Swiggy, Zomato)"]},
+  {name:"Transport", icon:"🚗", color:"#009B57", subs:[
+    "Fuel","FASTag / tolls","Parking","Cab and auto (Ola, Uber, Rapido)","Metro / bus pass",
+    "Vehicle insurance","Vehicle servicing","Vehicle EMI"]},
+  {name:"Health", icon:"❤️", color:"#00A88C", subs:[
+    "Health insurance premium","Doctor consultation","Medicines","Diagnostics","Dental","Eye care",
+    "Gym / fitness"]},
+  {name:"Education", icon:"📚", color:"#12C4A6", subs:[
+    "School / college fees","Tuition and coaching","Books, uniforms, stationery","School transport",
+    "Courses and certifications"]},
+  {name:"Insurance & Protection", icon:"🛡️", color:"#00806F", subs:[
+    "Term life","Health top-up","Personal accident","Home insurance","Vehicle insurance"]},
+  {name:"Investments & Savings", icon:"📈", color:"#0098BE", savings:true, subs:[
+    "SIP","PPF / EPF / NPS","RD / FD","Direct equity","ETFs","Gold"]},
+  {name:"Debt Repayment", icon:"🏦", color:"#35B8D6", subs:[
+    "Home loan EMI","Vehicle loan EMI","Personal loan EMI","Credit card bill payment"]},
+  {name:"Taxes", icon:"🧾", color:"#00728F", subs:[
+    "Income tax — advance tax","Income tax — self-assessment","Professional tax","GST on business income"]},
+  {name:"Lifestyle & Discretionary", icon:"🛍️", color:"#0070C0", subs:[
+    "Clothing and footwear","Personal care, salon","Subscriptions (OTT, cloud, apps)",
+    "Electronics and gadgets","Hobbies, books, sports"]},
+  {name:"Family & Social", icon:"🎁", color:"#1E8FE0", subs:[
+    "Festivals and gifts","Weddings and functions","Contributions to relatives",
+    "Donations, temple offerings","Support to parents / dependents"]},
+  {name:"Travel", icon:"✈️", color:"#4AA8F0", subs:[
+    "Domestic trips","International trips","Hometown visits","Flights / trains","Hotels","Visa and forex"]},
+  {name:"Miscellaneous", icon:"🔹", color:"#34708F", subs:[
+    "Bank charges, ATM fees, late fees","Legal, CA and documentation fees","Cash withdrawal",
+    "Emergency / unplanned"]}
+];
+
+const INCOME_TAXONOMY = [
+  {name:"Salary", icon:"💼", color:"#00B050", subs:["Monthly salary","Bonus","Arrears","Reimbursement"]},
+  {name:"Business / Freelance", icon:"🧑‍💻", color:"#0A8F3C", subs:["Client payment","Invoice settled","Consulting"]},
+  {name:"Investment Income", icon:"📈", color:"#00A88C", subs:["Dividend","Interest","Capital gains","Maturity payout"]},
+  {name:"Rent Received", icon:"🏘️", color:"#0098BE", subs:["Residential","Commercial"]},
+  {name:"Refunds & Cashback", icon:"↩️", color:"#1E8FE0", subs:["Purchase refund","Tax refund","Cashback"]},
+  {name:"Gifts Received", icon:"🎁", color:"#4AA8F0", subs:["Family","Festival"]},
+  {name:"Other Income", icon:"➕", color:"#34708F", subs:["Asset sale","Side income"]}
+];
+
+const OTHER_SUB = "Other";  // appended to every category; reveals a free-text box
+
+const EXPENSE_MODES = ["UPI","Credit Card","Cash","Netbanking","ATM Withdrawal",
+                       "Auto-debit / Mandate","Cheque / DD","Other"];
+const INCOME_MODES  = ["UPI","Netbanking","Bank Transfer","Cheque / DD","Auto-debit / Mandate","Cash","Other"];
+const OTHER_MODE = "Other";   // asks for typed details, and optionally hits the bank
+const CARD_MODE  = "Credit Card";
+const DEFAULT_CARDS = ["Scapia Credit Card","HDFC Credit Card","ICICI Credit Card"];
+const UNASSIGNED_CARD = "Unassigned card";
+const DEDUCTS = ["UPI","Netbanking","ATM Withdrawal","Auto-debit / Mandate","Cheque / DD"];
+const CREDITS = ["UPI","Netbanking","Bank Transfer","Cheque / DD","Auto-debit / Mandate"];
+const NEEDS_BANK = ["UPI","Netbanking","ATM Withdrawal","Auto-debit / Mandate","Cheque / DD","Bank Transfer"];
+
+/* Keyword -> [category, sub-category]. Longest match wins. */
+const KEYWORDS = {
+  "blinkit":["Food & Groceries","Online grocery (BigBasket, Blinkit, Zepto)"],
+  "zepto":["Food & Groceries","Online grocery (BigBasket, Blinkit, Zepto)"],
+  "bigbasket":["Food & Groceries","Online grocery (BigBasket, Blinkit, Zepto)"],
+  "instamart":["Food & Groceries","Online grocery (BigBasket, Blinkit, Zepto)"],
+  "dmart":["Food & Groceries","Kirana / supermarket"],
+  "kirana":["Food & Groceries","Kirana / supermarket"],
+  "supermarket":["Food & Groceries","Kirana / supermarket"],
+  "grocery":["Food & Groceries","Kirana / supermarket"],
+  "groceries":["Food & Groceries","Kirana / supermarket"],
+  "milk":["Food & Groceries","Milk, vegetables, fruits"],
+  "vegetable":["Food & Groceries","Milk, vegetables, fruits"],
+  "fruits":["Food & Groceries","Milk, vegetables, fruits"],
+  "swiggy":["Food & Groceries","Food delivery (Swiggy, Zomato)"],
+  "zomato":["Food & Groceries","Food delivery (Swiggy, Zomato)"],
+  "restaurant":["Food & Groceries","Eating out"],
+  "cafe":["Food & Groceries","Eating out"],
+  "coffee":["Food & Groceries","Eating out"],
+  "dinner":["Food & Groceries","Eating out"],
+  "lunch":["Food & Groceries","Eating out"],
+  "bakery":["Food & Groceries","Eating out"],
+
+  "rent":["Housing","Rent or home loan EMI"],
+  "home loan":["Housing","Rent or home loan EMI"],
+  "society":["Housing","Maintenance / society charges"],
+  "maintenance":["Housing","Maintenance / society charges"],
+  "property tax":["Housing","Property tax"],
+  "furniture":["Housing","Repairs, furnishing, appliances"],
+  "appliance":["Housing","Repairs, furnishing, appliances"],
+  "plumber":["Housing","Repairs, furnishing, appliances"],
+  "carpenter":["Housing","Repairs, furnishing, appliances"],
+  "electrician":["Housing","Repairs, furnishing, appliances"],
+
+  "electricity":["Utilities","Electricity (BESCOM)"],
+  "bescom":["Utilities","Electricity (BESCOM)"],
+  "water bill":["Utilities","Water"],
+  "lpg":["Utilities","Piped gas / LPG cylinder"],
+  "cylinder":["Utilities","Piped gas / LPG cylinder"],
+  "piped gas":["Utilities","Piped gas / LPG cylinder"],
+  "broadband":["Utilities","Broadband"],
+  "wifi":["Utilities","Broadband"],
+  "internet":["Utilities","Broadband"],
+  "fibernet":["Utilities","Broadband"],
+  "recharge":["Utilities","Mobile recharge"],
+  "jio":["Utilities","Mobile recharge"],
+  "airtel":["Utilities","Mobile recharge"],
+  "postpaid":["Utilities","Mobile recharge"],
+  "dth":["Utilities","DTH"],
+  "maid":["Utilities","Cook, maid, driver, security"],
+  "cook":["Utilities","Cook, maid, driver, security"],
+  "driver":["Utilities","Cook, maid, driver, security"],
+  "security":["Utilities","Cook, maid, driver, security"],
+
+  "petrol":["Transport","Fuel"],
+  "diesel":["Transport","Fuel"],
+  "fuel":["Transport","Fuel"],
+  "fastag":["Transport","FASTag / tolls"],
+  "toll":["Transport","FASTag / tolls"],
+  "parking":["Transport","Parking"],
+  "uber":["Transport","Cab and auto (Ola, Uber, Rapido)"],
+  "ola":["Transport","Cab and auto (Ola, Uber, Rapido)"],
+  "rapido":["Transport","Cab and auto (Ola, Uber, Rapido)"],
+  "auto":["Transport","Cab and auto (Ola, Uber, Rapido)"],
+  "cab":["Transport","Cab and auto (Ola, Uber, Rapido)"],
+  "metro":["Transport","Metro / bus pass"],
+  "bus pass":["Transport","Metro / bus pass"],
+  "vehicle insurance":["Transport","Vehicle insurance"],
+  "servicing":["Transport","Vehicle servicing"],
+  "car service":["Transport","Vehicle servicing"],
+
+  "hospital":["Health","Doctor consultation"],
+  "doctor":["Health","Doctor consultation"],
+  "clinic":["Health","Doctor consultation"],
+  "medicine":["Health","Medicines"],
+  "pharmacy":["Health","Medicines"],
+  "apollo":["Health","Medicines"],
+  "1mg":["Health","Medicines"],
+  "pharmeasy":["Health","Medicines"],
+  "lab test":["Health","Diagnostics"],
+  "diagnostic":["Health","Diagnostics"],
+  "scan":["Health","Diagnostics"],
+  "dental":["Health","Dental"],
+  "dentist":["Health","Dental"],
+  "eye":["Health","Eye care"],
+  "spectacles":["Health","Eye care"],
+  "gym":["Health","Gym / fitness"],
+  "yoga":["Health","Gym / fitness"],
+  "fitness":["Health","Gym / fitness"],
+  "health insurance":["Health","Health insurance premium"],
+
+  "school fee":["Education","School / college fees"],
+  "college":["Education","School / college fees"],
+  "tuition":["Education","Tuition and coaching"],
+  "coaching":["Education","Tuition and coaching"],
+  "stationery":["Education","Books, uniforms, stationery"],
+  "uniform":["Education","Books, uniforms, stationery"],
+  "udemy":["Education","Courses and certifications"],
+  "coursera":["Education","Courses and certifications"],
+  "certification":["Education","Courses and certifications"],
+
+  "term plan":["Insurance & Protection","Term life"],
+  "term life":["Insurance & Protection","Term life"],
+  "lic":["Insurance & Protection","Term life"],
+  "mediclaim":["Insurance & Protection","Health top-up"],
+  "personal accident":["Insurance & Protection","Personal accident"],
+  "home insurance":["Insurance & Protection","Home insurance"],
+
+  "sip":["Investments & Savings","SIP"],
+  "mutual fund":["Investments & Savings","SIP"],
+  "groww":["Investments & Savings","SIP"],
+  "elss":["Investments & Savings","SIP"],
+  "ppf":["Investments & Savings","PPF / EPF / NPS"],
+  "epf":["Investments & Savings","PPF / EPF / NPS"],
+  "nps":["Investments & Savings","PPF / EPF / NPS"],
+  "recurring deposit":["Investments & Savings","RD / FD"],
+  "fixed deposit":["Investments & Savings","RD / FD"],
+  "zerodha":["Investments & Savings","Direct equity"],
+  "upstox":["Investments & Savings","Direct equity"],
+  "stocks":["Investments & Savings","Direct equity"],
+  "shares":["Investments & Savings","Direct equity"],
+  "etf":["Investments & Savings","ETFs"],
+  "gold":["Investments & Savings","Gold"],
+  "sgb":["Investments & Savings","Gold"],
+
+  "home loan emi":["Debt Repayment","Home loan EMI"],
+  "car loan":["Debt Repayment","Vehicle loan EMI"],
+  "bike loan":["Debt Repayment","Vehicle loan EMI"],
+  "personal loan":["Debt Repayment","Personal loan EMI"],
+  "emi":["Debt Repayment","Personal loan EMI"],
+  "credit card bill":["Debt Repayment","Credit card bill payment"],
+  "card payment":["Debt Repayment","Credit card bill payment"],
+
+  "advance tax":["Taxes","Income tax — advance tax"],
+  "self assessment":["Taxes","Income tax — self-assessment"],
+  "income tax":["Taxes","Income tax — self-assessment"],
+  "professional tax":["Taxes","Professional tax"],
+  "gst":["Taxes","GST on business income"],
+
+  "clothes":["Lifestyle & Discretionary","Clothing and footwear"],
+  "myntra":["Lifestyle & Discretionary","Clothing and footwear"],
+  "ajio":["Lifestyle & Discretionary","Clothing and footwear"],
+  "footwear":["Lifestyle & Discretionary","Clothing and footwear"],
+  "shoes":["Lifestyle & Discretionary","Clothing and footwear"],
+  "salon":["Lifestyle & Discretionary","Personal care, salon"],
+  "haircut":["Lifestyle & Discretionary","Personal care, salon"],
+  "nykaa":["Lifestyle & Discretionary","Personal care, salon"],
+  "netflix":["Lifestyle & Discretionary","Subscriptions (OTT, cloud, apps)"],
+  "prime":["Lifestyle & Discretionary","Subscriptions (OTT, cloud, apps)"],
+  "spotify":["Lifestyle & Discretionary","Subscriptions (OTT, cloud, apps)"],
+  "hotstar":["Lifestyle & Discretionary","Subscriptions (OTT, cloud, apps)"],
+  "subscription":["Lifestyle & Discretionary","Subscriptions (OTT, cloud, apps)"],
+  "icloud":["Lifestyle & Discretionary","Subscriptions (OTT, cloud, apps)"],
+  "renewal":["Lifestyle & Discretionary","Subscriptions (OTT, cloud, apps)"],
+  "laptop":["Lifestyle & Discretionary","Electronics and gadgets"],
+  "mobile phone":["Lifestyle & Discretionary","Electronics and gadgets"],
+  "gadget":["Lifestyle & Discretionary","Electronics and gadgets"],
+  "amazon":["Lifestyle & Discretionary","Electronics and gadgets"],
+  "flipkart":["Lifestyle & Discretionary","Electronics and gadgets"],
+  "movie":["Lifestyle & Discretionary","Hobbies, books, sports"],
+  "bookmyshow":["Lifestyle & Discretionary","Hobbies, books, sports"],
+  "pvr":["Lifestyle & Discretionary","Hobbies, books, sports"],
+  "hobby":["Lifestyle & Discretionary","Hobbies, books, sports"],
+
+  "diwali":["Family & Social","Festivals and gifts"],
+  "pongal":["Family & Social","Festivals and gifts"],
+  "festival":["Family & Social","Festivals and gifts"],
+  "gift":["Family & Social","Festivals and gifts"],
+  "wedding":["Family & Social","Weddings and functions"],
+  "function":["Family & Social","Weddings and functions"],
+  "relatives":["Family & Social","Contributions to relatives"],
+  "donation":["Family & Social","Donations, temple offerings"],
+  "temple":["Family & Social","Donations, temple offerings"],
+  "charity":["Family & Social","Donations, temple offerings"],
+  "parents":["Family & Social","Support to parents / dependents"],
+
+  "flight":["Travel","Flights / trains"],
+  "indigo":["Travel","Flights / trains"],
+  "irctc":["Travel","Flights / trains"],
+  "train":["Travel","Flights / trains"],
+  "hotel":["Travel","Hotels"],
+  "oyo":["Travel","Hotels"],
+  "airbnb":["Travel","Hotels"],
+  "makemytrip":["Travel","Domestic trips"],
+  "goibibo":["Travel","Domestic trips"],
+  "trip":["Travel","Domestic trips"],
+  "hometown":["Travel","Hometown visits"],
+  "visa":["Travel","Visa and forex"],
+  "forex":["Travel","Visa and forex"],
+
+  "bank charge":["Miscellaneous","Bank charges, ATM fees, late fees"],
+  "late fee":["Miscellaneous","Bank charges, ATM fees, late fees"],
+  "atm fee":["Miscellaneous","Bank charges, ATM fees, late fees"],
+  "atm":["Miscellaneous","Cash withdrawal"],
+  "withdrawal":["Miscellaneous","Cash withdrawal"],
+  "lawyer":["Miscellaneous","Legal, CA and documentation fees"],
+  "legal":["Miscellaneous","Legal, CA and documentation fees"],
+  "notary":["Miscellaneous","Legal, CA and documentation fees"],
+  "emergency":["Miscellaneous","Emergency / unplanned"],
+
+  "salary":["Salary","Monthly salary"],
+  "bonus":["Salary","Bonus"],
+  "arrears":["Salary","Arrears"],
+  "reimbursement":["Salary","Reimbursement"],
+  "invoice":["Business / Freelance","Invoice settled"],
+  "freelance":["Business / Freelance","Client payment"],
+  "consulting":["Business / Freelance","Consulting"],
+  "dividend":["Investment Income","Dividend"],
+  "interest":["Investment Income","Interest"],
+  "capital gain":["Investment Income","Capital gains"],
+  "matured":["Investment Income","Maturity payout"],
+  "refund":["Refunds & Cashback","Purchase refund"],
+  "cashback":["Refunds & Cashback","Cashback"],
+  "tax refund":["Refunds & Cashback","Tax refund"]
+};
+
+/* Old flat categories (v1 data) mapped onto the new two-level tree. */
+const MIGRATE = {
+  "Groceries":["Food & Groceries","Kirana / supermarket"],
+  "Dining & Takeaway":["Food & Groceries","Eating out"],
+  "Household":["Housing","Repairs, furnishing, appliances"],
+  "Maintenance & Repairs":["Housing","Maintenance / society charges"],
+  "Rent":["Housing","Rent or home loan EMI"],
+  "Utilities":["Utilities","Electricity (BESCOM)"],
+  "Mobile & Internet":["Utilities","Broadband"],
+  "Renewals & Subscriptions":["Lifestyle & Discretionary","Subscriptions (OTT, cloud, apps)"],
+  "Insurance":["Insurance & Protection","Health top-up"],
+  "Taxes & Fees":["Taxes","Professional tax"],
+  "Fuel & Transport":["Transport","Fuel"],
+  "Travel":["Travel","Domestic trips"],
+  "Health & Medical":["Health","Doctor consultation"],
+  "Fitness":["Health","Gym / fitness"],
+  "Personal Care":["Lifestyle & Discretionary","Personal care, salon"],
+  "Shopping":["Lifestyle & Discretionary","Clothing and footwear"],
+  "Entertainment":["Lifestyle & Discretionary","Hobbies, books, sports"],
+  "Education":["Education","School / college fees"],
+  "Childcare":["Family & Social","Support to parents / dependents"],
+  "Pets":["Miscellaneous","Other"],
+  "Gifts & Donations":["Family & Social","Festivals and gifts"],
+  "EMI":["Debt Repayment","Personal loan EMI"],
+  "Loan Repayment":["Debt Repayment","Personal loan EMI"],
+  "SIP":["Investments & Savings","SIP"],
+  "Mutual Funds":["Investments & Savings","SIP"],
+  "Stocks & Trading":["Investments & Savings","Direct equity"],
+  "PPF":["Investments & Savings","PPF / EPF / NPS"],
+  "NPS":["Investments & Savings","PPF / EPF / NPS"],
+  "LIC":["Insurance & Protection","Term life"],
+  "Gold & Bonds":["Investments & Savings","Gold"],
+  "Cash Withdrawal":["Miscellaneous","Cash withdrawal"],
+  "Others":["Miscellaneous","Other"],
+  "Salary":["Salary","Monthly salary"],
+  "Refund":["Refunds & Cashback","Purchase refund"],
+  "Interest":["Investment Income","Interest"],
+  "Freelance":["Business / Freelance","Client payment"],
+  "Investment Payout":["Investment Income","Maturity payout"],
+  "Gift Received":["Gifts Received","Family"],
+  "Other Income":["Other Income","Side income"]
+};
+
+/* ---------- B. STORE + MIGRATION ---------------------------------- */
+
+const DB_KEY = "expense-tracker-v1";
+const blank = () => ({
+  version:4,
+  cards:DEFAULT_CARDS.slice(),
+  accounts:[{id:uid(), name:"Main Account", baseline:0, baselineAt:Date.now()}],
+  txns:[],
+  customCats:[],      // [{name, type}]
+  customSubs:{}       // {categoryName: [sub, sub]}
+});
+let state = load();
+
+function load(){
+  try{
+    const raw = localStorage.getItem(DB_KEY);
+    if(!raw) return blank();
+    let s = JSON.parse(raw);
+    s.accounts = (s.accounts && s.accounts.length) ? s.accounts : blank().accounts;
+    s.txns = s.txns || [];
+    s.customCats = s.customCats || [];
+    s.customSubs = s.customSubs || {};
+    if(!s.version || s.version < 2){
+      // v1 stored a single flat "category" — split it into cat + sub
+      s.txns.forEach(t => {
+        if(t.cat) return;
+        const m = MIGRATE[t.category];
+        t.cat = m ? m[0] : (t.type === "income" ? "Other Income" : "Miscellaneous");
+        t.sub = m ? m[1] : OTHER_SUB;
+        if(!m && t.category){ t.otherDetail = [t.category, t.otherDetail].filter(Boolean).join(" · "); }
+        delete t.category;
+      });
+      (s.customCategories || []).forEach(c => {
+        if(!s.customSubs["Miscellaneous"]) s.customSubs["Miscellaneous"] = [];
+        if(!s.customSubs["Miscellaneous"].includes(c)) s.customSubs["Miscellaneous"].push(c);
+      });
+      delete s.customCategories;
+      s.version = 2;
+    }
+    if(s.version < 3){
+      // payment modes reworked: Rupay folded into Credit Card, Cheque renamed
+      s.txns.forEach(t => {
+        if(t.mode === "Rupay Credit Card"){ t.mode = "Credit Card"; t.modeDetail = t.modeDetail || "Rupay credit card"; }
+        if(t.mode === "Cheque") t.mode = "Cheque / DD";
+      });
+      s.version = 3;
+    }
+    if(s.version < 4){
+      s.cards = DEFAULT_CARDS.slice();
+      s.version = 4;
+    }
+    s.cards = (s.cards && s.cards.length) ? s.cards : DEFAULT_CARDS.slice();
+    localStorage.setItem(DB_KEY, JSON.stringify(s));
+    return s;
+  }catch(e){ console.warn("Could not read saved data:", e); return blank(); }
+}
+function save(){
+  try{ localStorage.setItem(DB_KEY, JSON.stringify(state)); }
+  catch(e){ toast("Couldn't save — storage may be full"); }
+}
+
+/* ---------- C. HELPERS -------------------------------------------- */
+
+function uid(){ return Math.random().toString(36).slice(2,10) + Date.now().toString(36).slice(-4); }
+const $ = s => document.querySelector(s);
+const $$ = s => Array.from(document.querySelectorAll(s));
+const esc = s => String(s??"").replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+
+function money(n){ return "₹" + Math.round(Number(n||0)).toLocaleString("en-IN"); }
+function toISO(d){
+  const x = new Date(d);
+  return x.getFullYear() + "-" + String(x.getMonth()+1).padStart(2,"0") + "-" + String(x.getDate()).padStart(2,"0");
+}
+function fmtDate(iso){
+  const [y,m,d] = iso.split("-").map(Number);
+  return new Date(y,m-1,d).toLocaleDateString("en-IN",{day:"numeric",month:"short",year:"numeric"});
+}
+
+/* taxonomy access ------------------------------------------------- */
+function tree(type){
+  const base = type === "income" ? INCOME_TAXONOMY : TAXONOMY;
+  const custom = state.customCats.filter(c => c.type === type)
+    .map(c => ({name:c.name, icon:"🔹", color:hashColor(c.name), subs:[]}));
+  return base.concat(custom);
+}
+function catMeta(name){
+  const all = TAXONOMY.concat(INCOME_TAXONOMY);
+  return all.find(c => c.name === name)
+      || {name:name || "Uncategorised", icon:"🔹", color:hashColor(name), subs:[]};
+}
+function subsFor(catName){
+  const base = catMeta(catName).subs || [];
+  const custom = (state.customSubs[catName] || []).filter(s => !base.includes(s));
+  return base.concat(custom, [OTHER_SUB]);
+}
+/* each card keeps a stable colour from the green->blue arc */
+function cardColor(name){
+  const i = state.cards.indexOf(name);
+  if(i < 0) return hashColor(name);
+  const span = Math.max(state.cards.length - 1, 1);
+  return hslHex(150 + (58 * i / span), 72, 40);
+}
+function hashColor(name){
+  let h = 0; const s = String(name||"x");
+  for(let i=0;i<s.length;i++) h = (h*31 + s.charCodeAt(i)) % 360;
+  return hslHex(140 + (h % 70), 78, 38);   // green -> blue arc only
+}
+/* sub-categories get a lighter or darker step of the parent colour  */
+function subColor(catName, subName){
+  const parent = catMeta(catName).color;
+  const list = subsFor(catName);
+  const i = Math.max(0, list.indexOf(subName));
+  const [h,s,l] = hexHsl(parent);
+  const step = (i - (list.length-1)/2) * 8;
+  return hslHex(h, s, Math.min(72, Math.max(24, l + step)));
+}
+function hexHsl(hex){
+  const n = parseInt(hex.slice(1),16);
+  let r=((n>>16)&255)/255, g=((n>>8)&255)/255, b=(n&255)/255;
+  const mx=Math.max(r,g,b), mn=Math.min(r,g,b), d=mx-mn;
+  let h=0, s=0, l=(mx+mn)/2;
+  if(d){
+    s = d/(1-Math.abs(2*l-1));
+    h = mx===r ? 60*(((g-b)/d)%6) : mx===g ? 60*((b-r)/d+2) : 60*((r-g)/d+4);
+  }
+  return [(h+360)%360, s*100, l*100];
+}
+function hslHex(h,s,l){
+  s/=100; l/=100;
+  const c=(1-Math.abs(2*l-1))*s, x=c*(1-Math.abs((h/60)%2-1)), m=l-c/2;
+  let [r,g,b] = h<60?[c,x,0]:h<120?[x,c,0]:h<180?[0,c,x]:h<240?[0,x,c]:h<300?[x,0,c]:[c,0,x];
+  const f = v => Math.round((v+m)*255).toString(16).padStart(2,"0");
+  return "#" + f(r) + f(g) + f(b);
+}
+function suggestFrom(text, type){
+  const t = " " + String(text||"").toLowerCase() + " ";
+  if(t.trim().length < 2) return null;
+  const names = tree(type).map(c => c.name);
+  let best = null, len = 0;
+  for(const [word, pair] of Object.entries(KEYWORDS)){
+    if(!names.includes(pair[0])) continue;
+    if(t.includes(word) && word.length > len){ best = pair; len = word.length; }
+  }
+  return best;
+}
+function toast(msg){
+  const el = $("#toast");
+  el.textContent = msg; el.classList.add("show");
+  clearTimeout(toast._t);
+  toast._t = setTimeout(() => el.classList.remove("show"), 2200);
+}
+function acctName(id){ const a = state.accounts.find(a => a.id === id); return a ? a.name : ""; }
+
+/* ---------- D. BANK BALANCE --------------------------------------- */
+
+function affectsBank(t){
+  // "Other" only moves the balance if an account was attached to the entry
+  if(t.mode === OTHER_MODE) return !!t.account;
+  if(t.type === "income") return CREDITS.includes(t.mode) && !!t.account;
+  return DEDUCTS.includes(t.mode) && !!t.account;
+}
+function accountBalance(acc){
+  let b = Number(acc.baseline) || 0;
+  for(const t of state.txns){
+    if(t.account !== acc.id) continue;
+    if((t.createdAt || 0) < (acc.baselineAt || 0)) continue;
+    if(!affectsBank(t)) continue;
+    b += t.type === "income" ? t.amount : -t.amount;
+  }
+  return b;
+}
+function totalBalance(){ return state.accounts.reduce((s,a) => s + accountBalance(a), 0); }
+
+/* ---------- E. ADD VIEW ------------------------------------------- */
+
+const form = { type:"expense", cat:"", sub:"", mode:"UPI", card:"" };
+
+function renderAddView(){
+  const isIn = form.type === "income";
+  $("#pageTitle").textContent = isIn ? "Log money in" : "Add expense";
+  $("#saveBtn").textContent = isIn ? "Add credit" : "Add expense";
+
+  // categories, most used first
+  const used = {};
+  state.txns.filter(t => t.type === form.type).forEach(t => used[t.cat] = (used[t.cat]||0)+1);
+  const cats = tree(form.type).slice().sort((a,b) => (used[b.name]||0) - (used[a.name]||0));
+  $("#catChips").innerHTML = cats.map(c => `
+    <button type="button" class="chip ${form.cat===c.name?"is-on":""}" data-cat="${esc(c.name)}"
+      style="${form.cat===c.name?`background:${c.color};border-color:${c.color}`:""}">
+      <span>${c.icon}</span>${esc(c.name)}
+    </button>`).join("");
+  $("#catList").innerHTML = tree(form.type).map(c => `<option value="${esc(c.name)}"></option>`).join("");
+
+  // sub-categories of the chosen category
+  const subs = form.cat ? subsFor(form.cat) : [];
+  $("#subWrap").style.display = form.cat ? "block" : "none";
+  if(form.cat){
+    const pc = catMeta(form.cat).color;
+    $("#subChips").innerHTML = subs.map(s => `
+      <button type="button" class="chip ${form.sub===s?"is-on":""}" data-sub="${esc(s)}"
+        style="${form.sub===s?`background:${subColor(form.cat,s)};border-color:${subColor(form.cat,s)}`:`color:${pc}`}">
+        ${esc(s)}</button>`).join("");
+    $("#subList").innerHTML = subs.map(s => `<option value="${esc(s)}"></option>`).join("");
+  }
+
+  // payment modes
+  const modes = isIn ? INCOME_MODES : EXPENSE_MODES;
+  if(!modes.includes(form.mode)) form.mode = modes[0];
+  $("#modeChips").innerHTML = modes.map(m => `
+    <button type="button" class="chip ${form.mode===m?"is-on":""} ${/Cash/.test(m)?"mode-cash":""} ${/Card/.test(m)?"mode-card":""}" data-mode="${esc(m)}">${esc(m)}</button>`).join("");
+
+  // which credit card was used
+  const isCard = form.mode === CARD_MODE;
+  $("#cardWrap").style.display = isCard ? "block" : "none";
+  if(isCard){
+    if(state.cards.length && !state.cards.includes(form.card)) form.card = state.cards[0];
+    $("#cardChips").innerHTML = state.cards.map(c => `
+      <button type="button" class="chip ${form.card===c?"is-on":""}" data-card="${esc(c)}"
+        style="${form.card===c?`background:${cardColor(c)};border-color:${cardColor(c)}`:`color:${cardColor(c)}`}">
+        💳 ${esc(c)}</button>`).join("")
+      || `<span class="hint" style="margin:0">Add your cards in Settings.</span>`;
+  }
+
+  const isOther = form.mode === OTHER_MODE;
+  $("#modeDetailWrap").style.display = isOther ? "block" : "none";
+  $("#bankEffectWrap").style.display = isOther ? "flex" : "none";
+  const needBank = NEEDS_BANK.includes(form.mode) || (isOther && $("#fBankEffect").checked);
+  $("#bankWrap").style.display = needBank ? "block" : "none";
+  $("#bankLabel").textContent = form.mode === "UPI" ? "Linked bank account" : (isIn ? "Credited to" : "Bank account");
+  const prev = $("#fBank").value;
+  $("#fBank").innerHTML = state.accounts
+    .map(a => `<option value="${a.id}">${esc(a.name)} · ${money(accountBalance(a))}</option>`).join("");
+  if(prev && state.accounts.some(a => a.id === prev)) $("#fBank").value = prev;
+
+  $("#otherWrap").style.display = form.sub === OTHER_SUB ? "block" : "none";
+
+  const hits = isOther ? needBank : (isIn ? CREDITS.includes(form.mode) : DEDUCTS.includes(form.mode));
+  $("#effectHint").innerHTML = hits
+    ? `<strong>${isIn ? "Adds to" : "Deducts from"}</strong> your bank balance.`
+    : `Does <strong>not</strong> change your bank balance — ${
+        isOther ? "tick the box above if it did" :
+        isIn ? "cash in hand" :
+        form.mode.includes("Card") ? "card spending is settled separately" : "paid in cash"}.`;
+
+  $("#hdrBalance").textContent = money(totalBalance());
+}
+
+function saveEntry(){
+  const amount = parseFloat($("#fAmount").value);
+  const date = $("#fDate").value;
+  const cat = ($("#fCategory").value || form.cat).trim();
+  const sub = ($("#fSub").value || form.sub).trim();
+  const notes = $("#fNotes").value.trim();
+  const other = $("#fOther").value.trim();
+  const isOther = form.mode === OTHER_MODE;
+  const card = form.mode === CARD_MODE ? form.card : "";
+  const modeDetail = $("#fModeDetail").value.trim();
+  const needBank = NEEDS_BANK.includes(form.mode) || (isOther && $("#fBankEffect").checked);
+  const account = needBank ? $("#fBank").value : "";
+
+  if(!(amount > 0)) return toast("Enter an amount above zero");
+  if(!date) return toast("Pick a date");
+  if(!cat) return toast("Choose a category");
+  if(!sub) return toast("Choose a sub-category");
+  if(form.mode === CARD_MODE && !card) return toast("Pick which credit card was used");
+  if(isOther && !modeDetail) return toast("Describe how this was paid");
+  if(needBank && !account) return toast("Pick the bank account used");
+  if(sub === OTHER_SUB && !other) return toast("Add a short detail for Other");
+
+  // remember anything typed by hand
+  if(!tree(form.type).some(c => c.name === cat)) state.customCats.push({name:cat, type:form.type});
+  if(!subsFor(cat).includes(sub)){
+    state.customSubs[cat] = state.customSubs[cat] || [];
+    state.customSubs[cat].push(sub);
+  }
+
+  state.txns.push({
+    id:uid(), type:form.type, amount, date, cat, sub,
+    otherDetail:other, notes, mode:form.mode, card, modeDetail, account, createdAt:Date.now()
+  });
+  save();
+
+  $("#fAmount").value = ""; $("#fNotes").value = ""; $("#fOther").value = ""; $("#fModeDetail").value = "";
+  $("#fSub").value = ""; form.sub = "";
+  $("#suggestBox").style.display = "none";
+  renderAddView(); renderAll();
+  toast(`${form.type === "income" ? "Credit" : "Expense"} of ${money(amount)} saved`);
+  $("#fAmount").focus();
+}
+
+/* ---------- F. HISTORY -------------------------------------------- */
+
+function filteredTxns(){
+  const q = $("#qSearch").value.trim().toLowerCase();
+  const cat = $("#qCategory").value, sub = $("#qSub").value;
+  const mode = $("#qMode").value, days = $("#qRange").value;
+  let list = state.txns.slice().sort((a,b) => b.date.localeCompare(a.date) || b.createdAt - a.createdAt);
+
+  if(days !== "all"){
+    const from = new Date(); from.setDate(from.getDate() - Number(days));
+    const fromISO = toISO(from);
+    list = list.filter(t => t.date >= fromISO);
+  }
+  if(cat !== "all") list = list.filter(t => t.cat === cat);
+  if(sub !== "all") list = list.filter(t => t.sub === sub);
+  if(mode !== "all") list = list.filter(t => t.mode === mode);
+  if(q){
+    list = list.filter(t => [
+      t.date, fmtDate(t.date), String(t.amount), t.cat, t.sub, t.mode, t.card, t.modeDetail,
+      acctName(t.account), t.notes, t.otherDetail, t.type
+    ].join(" ").toLowerCase().includes(q));
+  }
+  return list;
+}
+
+function renderHistory(){
+  const cats = Array.from(new Set(state.txns.map(t => t.cat))).sort();
+  const keepC = $("#qCategory").value, keepS = $("#qSub").value, keepM = $("#qMode").value;
+  $("#qCategory").innerHTML = `<option value="all">All categories</option>` +
+    cats.map(c => `<option value="${esc(c)}">${esc(c)}</option>`).join("");
+  if(keepC && (keepC === "all" || cats.includes(keepC))) $("#qCategory").value = keepC;
+
+  // sub filter follows the chosen category
+  const chosen = $("#qCategory").value;
+  const subs = Array.from(new Set(state.txns
+    .filter(t => chosen === "all" || t.cat === chosen).map(t => t.sub))).sort();
+  $("#qSub").innerHTML = `<option value="all">All sub-categories</option>` +
+    subs.map(s => `<option value="${esc(s)}">${esc(s)}</option>`).join("");
+  if(keepS && (keepS === "all" || subs.includes(keepS))) $("#qSub").value = keepS;
+
+  $("#qMode").innerHTML = `<option value="all">All modes</option>` +
+    Array.from(new Set(EXPENSE_MODES.concat(INCOME_MODES)))
+      .map(m => `<option value="${esc(m)}">${esc(m)}</option>`).join("");
+  if(keepM) $("#qMode").value = keepM;
+
+  const list = filteredTxns();
+  const out = list.filter(t => t.type === "expense").reduce((s,t) => s + t.amount, 0);
+  const inn = list.filter(t => t.type === "income").reduce((s,t) => s + t.amount, 0);
+  $("#qCount").innerHTML = `${list.length} entries · <strong>${money(out)} out</strong> · <strong>${money(inn)} in</strong>`;
+
+  if(!list.length){
+    $("#txnTable").innerHTML = `<div class="empty">No entries match this filter. Adjust the search, or add your first entry from the Add tab.</div>`;
+    return;
+  }
+  $("#txnTable").innerHTML = `
+  <table>
+    <thead><tr>
+      <th>Date</th><th>Category</th><th>Sub-category</th><th>Notes</th><th>Mode</th><th>Bank</th>
+      <th style="text-align:right">Amount</th><th></th>
+    </tr></thead>
+    <tbody>
+    ${list.map(t => {
+      const m = catMeta(t.cat);
+      const note = t.otherDetail ? `${t.notes ? t.notes + " · " : ""}${t.otherDetail}` : t.notes;
+      return `<tr>
+        <td data-k="Date">${fmtDate(t.date)}</td>
+        <td data-k="Category"><span class="tag"><i class="dot" style="background:${m.color}"></i>${esc(t.cat)}</span></td>
+        <td data-k="Sub-category"><span class="sub-txt">${esc(t.sub||"—")}</span></td>
+        <td data-k="Notes">${esc(note) || "<span style='color:var(--ink-3)'>—</span>"}</td>
+        <td data-k="Mode"><span class="mode-pill">${esc(t.mode)}</span>${
+          t.card ? `<div class="sub-txt" style="margin-top:3px;color:${cardColor(t.card)}">${esc(t.card)}</div>` : ""}${
+          t.modeDetail ? `<div class="sub-txt" style="margin-top:3px">${esc(t.modeDetail)}</div>` : ""}</td>
+        <td data-k="Bank">${esc(acctName(t.account)) || "<span style='color:var(--ink-3)'>—</span>"}</td>
+        <td data-k="Amount" class="num" style="color:${t.type==="income"?"var(--green)":"inherit"}">
+          ${t.type==="income"?"+":"−"}${money(t.amount)}</td>
+        <td><button class="x" data-del="${t.id}" title="Delete entry">✕</button></td>
+      </tr>`;
+    }).join("")}
+    </tbody>
+  </table>`;
+}
+
+/* ---------- G. SUMMARY -------------------------------------------- */
+
+const ui = { period:"month", anchor:new Date(), level:"cat" };
+
+function startOfWeek(d){ const x = new Date(d); const w = (x.getDay()+6)%7; x.setDate(x.getDate()-w); x.setHours(0,0,0,0); return x; }
+function periodRange(period, anchor){
+  const a = new Date(anchor); a.setHours(0,0,0,0);
+  let start, end, label, sub;
+  if(period === "day"){
+    start = new Date(a); end = new Date(a); end.setDate(end.getDate()+1);
+    label = a.toLocaleDateString("en-IN",{day:"numeric",month:"long"});
+    sub = a.toLocaleDateString("en-IN",{weekday:"long",year:"numeric"});
+  } else if(period === "week"){
+    start = startOfWeek(a); end = new Date(start); end.setDate(end.getDate()+7);
+    const last = new Date(end); last.setDate(last.getDate()-1);
+    label = start.toLocaleDateString("en-IN",{day:"numeric",month:"short"}) + " – " + last.toLocaleDateString("en-IN",{day:"numeric",month:"short"});
+    sub = String(start.getFullYear());
+  } else if(period === "month"){
+    start = new Date(a.getFullYear(), a.getMonth(), 1); end = new Date(a.getFullYear(), a.getMonth()+1, 1);
+    label = start.toLocaleDateString("en-IN",{month:"long"}); sub = String(start.getFullYear());
+  } else if(period === "quarter"){
+    const q = Math.floor(a.getMonth()/3);
+    start = new Date(a.getFullYear(), q*3, 1); end = new Date(a.getFullYear(), q*3+3, 1);
+    label = "Q" + (q+1); sub = String(start.getFullYear());
+  } else {
+    start = new Date(a.getFullYear(),0,1); end = new Date(a.getFullYear()+1,0,1);
+    label = String(a.getFullYear()); sub = "Full year";
+  }
+  return {start, end, label, sub};
+}
+function shiftAnchor(dir){
+  const a = new Date(ui.anchor);
+  if(ui.period === "day") a.setDate(a.getDate()+dir);
+  else if(ui.period === "week") a.setDate(a.getDate()+7*dir);
+  else if(ui.period === "month") a.setMonth(a.getMonth()+dir);
+  else if(ui.period === "quarter") a.setMonth(a.getMonth()+3*dir);
+  else a.setFullYear(a.getFullYear()+dir);
+  ui.anchor = a;
+}
+function inRange(t, r){ return t.date >= toISO(r.start) && t.date < toISO(r.end); }
+
+/* Payment-mode breakdown: one bucket per credit card, one for everything that
+   moves through a bank account (split by account), one for cash and the rest. */
+function modeGroups(spends){
+  const cards = {}, banks = {}, other = {name:"Cash & other", icon:"💵", color:"#7A96A8", val:0, n:0};
+  spends.forEach(t => {
+    if(t.mode === CARD_MODE){
+      const name = t.card || UNASSIGNED_CARD;
+      if(!cards[name]) cards[name] = {name, icon:"💳", color:cardColor(name), val:0, n:0};
+      cards[name].val += t.amount; cards[name].n++;
+    } else if(affectsBank(t)){
+      const name = acctName(t.account) || "Unlinked account";
+      if(!banks[name]) banks[name] = {name, color:"var(--accent)", val:0, n:0};
+      banks[name].val += t.amount; banks[name].n++;
+    } else {
+      other.val += t.amount; other.n++;
+    }
+  });
+  const rows = Object.values(cards).sort((a,b) => b.val - a.val);
+  const bankKids = Object.values(banks).sort((a,b) => b.val - a.val);
+  const bankTotal = bankKids.reduce((s,k) => s + k.val, 0);
+  if(bankTotal) rows.push({
+    name:"Bank balance", icon:"🏦", color:"#0070C0",
+    val:bankTotal, n:bankKids.reduce((s,k) => s + k.n, 0),
+    note:bankKids.length + (bankKids.length===1?" account · ":" accounts · "),
+    children:bankKids
+  });
+  if(other.val) rows.push(other);
+  return rows.sort((a,b) => b.val - a.val);
+}
+
+function renderSummary(){
+  const r = periodRange(ui.period, ui.anchor);
+  $("#pLabel").textContent = r.label;
+  $("#pSub").textContent = r.sub;
+
+  const floor = new Date(); floor.setFullYear(floor.getFullYear()-2);
+  $("#prevP").disabled = r.start <= floor;
+  $("#nextP").disabled = r.end > new Date(new Date().setHours(23,59,59,999));
+
+  const inPeriod = state.txns.filter(t => inRange(t, r));
+  const spends = inPeriod.filter(t => t.type === "expense");
+  const credits = inPeriod.filter(t => t.type === "income");
+  const spent = spends.reduce((s,t) => s + t.amount, 0);
+  const gotten = credits.reduce((s,t) => s + t.amount, 0);
+  const savings = spends.filter(t => (catMeta(t.cat).savings)).reduce((s,t) => s + t.amount, 0);
+
+  $("#sSpent").textContent = money(spent);
+  $("#sCount").textContent = savings
+    ? `incl. ${money(savings)} to investments & savings`
+    : spends.length + (spends.length === 1 ? " transaction" : " transactions");
+  $("#sIn").textContent = money(gotten);
+  $("#sInCount").textContent = credits.length + (credits.length === 1 ? " credit" : " credits");
+  $("#sBal").textContent = money(totalBalance());
+  $("#sBalSub").textContent = state.accounts.length + (state.accounts.length === 1 ? " account" : " accounts");
+
+  // group by category, sub-category, or payment mode
+  let rows = [];
+  if(ui.level === "mode"){
+    rows = modeGroups(spends);
+  } else {
+    const groups = {};
+    spends.forEach(t => {
+      const key = ui.level === "cat" ? t.cat : (t.cat + " › " + (t.sub || "—"));
+      if(!groups[key]) groups[key] = {
+        name: ui.level === "cat" ? t.cat : (t.sub || "—"),
+        parent: t.cat,
+        icon: catMeta(t.cat).icon,
+        color: ui.level === "cat" ? catMeta(t.cat).color : subColor(t.cat, t.sub),
+        val: 0, n: 0
+      };
+      groups[key].val += t.amount; groups[key].n++;
+    });
+    rows = Object.values(groups).sort((a,b) => b.val - a.val);
+  }
+
+  $("#donutWrap").innerHTML = rows.length
+    ? donutSVG(rows, spent) + legendHTML(rows, spent)
+    : `<div class="empty" style="width:100%">Nothing spent in this period yet.</div>`;
+
+  $("#catList2").innerHTML = rows.length ? rows.map(c => {
+    const head = `
+      <div class="row">
+        <div class="ic" style="color:${c.color}">${c.icon}</div>
+        <div class="main">
+          <div class="t1">${esc(c.name)}</div>
+          <div class="t2">${c.note || (ui.level === "cat" ? "" : esc(c.parent||"") + " · ")}${c.n} ${c.n===1?"entry":"entries"}</div>
+        </div>
+        <div class="amt">${money(c.val)}<span class="pct">${Math.round(c.val/spent*100)}%</span></div>
+      </div>`;
+    const kids = (c.children || []).map(k => `
+      <div class="row child">
+        <div class="ic small" style="color:${k.color}">🏦</div>
+        <div class="main">
+          <div class="t1">${esc(k.name)}</div>
+          <div class="t2">${k.n} ${k.n===1?"entry":"entries"}</div>
+        </div>
+        <div class="amt">${money(k.val)}<span class="pct">${Math.round(k.val/c.val*100)}% of bank</span></div>
+      </div>`).join("");
+    return head + kids;
+  }).join("") : `<div class="empty">No categories to show.</div>`;
+
+  renderBars(r, spends);
+}
+
+function renderBars(r, spends){
+  let buckets = [];
+  if(ui.period === "day" || ui.period === "week"){
+    const start = ui.period === "day" ? new Date(new Date(r.start).setDate(r.start.getDate()-6)) : new Date(r.start);
+    for(let i=0;i<7;i++){
+      const d = new Date(start); d.setDate(d.getDate()+i);
+      buckets.push({label:d.toLocaleDateString("en-IN",{weekday:"narrow"}), from:toISO(d), to:toISO(new Date(d.getTime()+864e5))});
+    }
+    $("#trendLabel").textContent = ui.period === "day" ? "Last 7 days" : "Day by day";
+  } else if(ui.period === "month"){
+    const days = new Date(r.start.getFullYear(), r.start.getMonth()+1, 0).getDate();
+    for(let i=1;i<=days;i++){
+      const d = new Date(r.start.getFullYear(), r.start.getMonth(), i);
+      buckets.push({label:(i%5===0||i===1)?String(i):"", from:toISO(d), to:toISO(new Date(d.getTime()+864e5))});
+    }
+    $("#trendLabel").textContent = "Day by day";
+  } else if(ui.period === "quarter"){
+    for(let i=0;i<3;i++){
+      const d = new Date(r.start.getFullYear(), r.start.getMonth()+i, 1);
+      const e = new Date(r.start.getFullYear(), r.start.getMonth()+i+1, 1);
+      buckets.push({label:d.toLocaleDateString("en-IN",{month:"short"}), from:toISO(d), to:toISO(e)});
+    }
+    $("#trendLabel").textContent = "Month by month";
+  } else {
+    for(let i=0;i<12;i++){
+      const d = new Date(r.start.getFullYear(), i, 1), e = new Date(r.start.getFullYear(), i+1, 1);
+      buckets.push({label:d.toLocaleDateString("en-IN",{month:"narrow"}), from:toISO(d), to:toISO(e)});
+    }
+    $("#trendLabel").textContent = "Month by month";
+  }
+  const pool = (ui.period === "day") ? state.txns.filter(t => t.type === "expense") : spends;
+  const vals = buckets.map(b => pool.filter(t => t.date >= b.from && t.date < b.to).reduce((s,t) => s + t.amount, 0));
+  const max = Math.max(...vals, 1);
+  $("#bars").innerHTML = buckets.map((b,i) => `
+    <div class="b ${vals[i]?"":"zero"}" title="${b.label}: ${money(vals[i])}">
+      <i style="height:${Math.max(2, vals[i]/max*118)}px"></i><span>${esc(b.label)}</span>
+    </div>`).join("");
+}
+
+/* ---------- I. CHARTS (inline SVG, no libraries) ------------------- */
+
+function donutSVG(rows, total){
+  const R = 66, SW = 26, C = 2*Math.PI*R;
+  const gap = rows.length > 1 ? 1.5 : 0;
+  let offset = 0;
+  const arcs = rows.map(c => {
+    const frac = c.val/total;
+    const len = Math.max(C*frac - gap, 0.6);
+    const seg = `<circle r="${R}" cx="0" cy="0" fill="none" stroke="${c.color}" stroke-width="${SW}"
+      stroke-dasharray="${len} ${C-len}" stroke-dashoffset="${-offset}" transform="rotate(-90)"/>`;
+    offset += C*frac;
+    return seg;
+  }).join("");
+  return `<svg width="190" height="190" viewBox="-95 -95 190 190" role="img" aria-label="Spending breakdown">
+    <g>${arcs}</g>
+    <g class="donut-mid" text-anchor="middle">
+      <text class="n" y="0">${rows.length}</text>
+      <text class="s" y="16">${ui.level === "cat" ? "categories" : ui.level === "sub" ? "sub-categories" : "payment modes"}</text>
+    </g></svg>`;
+}
+function legendHTML(rows, total){
+  return `<div class="legend">` + rows.slice(0,8).map(c => `
+    <div><i class="dot" style="background:${c.color}"></i>
+      <span class="nm">${esc(c.name)}</span>
+      <span class="vl">${money(c.val)}</span>
+      <span style="color:var(--ink-3);font-size:12px">${Math.round(c.val/total*100)}%</span>
+    </div>`).join("") +
+    (rows.length > 8 ? `<div style="color:var(--ink-3)">+ ${rows.length-8} more below</div>` : "") + `</div>`;
+}
+
+/* ---------- H. SETTINGS -------------------------------------------- */
+
+function renderSettings(){
+  $("#acctList").innerHTML = state.accounts.map(a => `
+    <div class="row">
+      <div class="ic" style="color:var(--accent)">🏦</div>
+      <div class="main">
+        <div class="t1">${esc(a.name)}</div>
+        <div class="t2">Balance set ${new Date(a.baselineAt).toLocaleDateString("en-IN",{day:"numeric",month:"short",year:"numeric"})}</div>
+      </div>
+      <div class="inline">
+        <button class="btn ghost sm" data-editbal="${a.id}">${money(accountBalance(a))}</button>
+        ${state.accounts.length > 1 ? `<button class="x" data-delacct="${a.id}" title="Remove account">✕</button>` : ""}
+      </div>
+    </div>`).join("");
+
+  $("#cardList").innerHTML = state.cards.length ? state.cards.map(c => {
+    const n = state.txns.filter(t => t.card === c).length;
+    const spent = state.txns.filter(t => t.card === c && t.type === "expense").reduce((s,t) => s + t.amount, 0);
+    return `<div class="row">
+      <div class="ic" style="color:${cardColor(c)}">💳</div>
+      <div class="main"><div class="t1">${esc(c)}</div>
+        <div class="t2">${n} ${n===1?"entry":"entries"} · ${money(spent)} spent overall</div></div>
+      <button class="x" data-delcard="${esc(c)}" title="Remove card">✕</button>
+    </div>`;
+  }).join("") : `<div class="empty">No cards yet. Add one below.</div>`;
+
+  // parent picker for new sub-categories
+  const opts = TAXONOMY.concat(INCOME_TAXONOMY).map(c => `<option value="${esc(c.name)}">${c.icon} ${esc(c.name)}</option>`).join("");
+  const keep = $("#newSubParent").value;
+  $("#newSubParent").innerHTML = opts;
+  if(keep) $("#newSubParent").value = keep;
+
+  const custom = Object.entries(state.customSubs).flatMap(([cat, list]) => list.map(s => [cat, s]));
+  $("#customSubs").innerHTML = custom.length
+    ? custom.map(([cat,s]) => `<span class="chip" style="color:${catMeta(cat).color}">${esc(cat)} › ${esc(s)}
+        <button class="x" data-delsub="${esc(cat)}|${esc(s)}">✕</button></span>`).join("")
+    : `<span class="hint" style="margin:0">No custom sub-categories yet.</span>`;
+
+  // full taxonomy reference
+  $("#taxonomy").innerHTML = TAXONOMY.map(c => `
+    <div class="row">
+      <div class="ic" style="color:${c.color}">${c.icon}</div>
+      <div class="main">
+        <div class="t1">${esc(c.name)}</div>
+        <div class="t2">${c.subs.map(esc).join(" · ")}</div>
+      </div>
+      <div class="amt" style="font-size:13px;color:var(--ink-3)">${c.subs.length}</div>
+    </div>`).join("");
+}
+
+/* ---------- EXPORT / IMPORT (HOOK: add .xlsx here) ------------------ */
+
+function download(name, text, type){
+  const blob = new Blob([text], {type});
+  const a = document.createElement("a");
+  a.href = URL.createObjectURL(blob); a.download = name; a.click();
+  setTimeout(() => URL.revokeObjectURL(a.href), 1000);
+}
+function exportJSON(){
+  download(`expenses-backup-${toISO(new Date())}.json`, JSON.stringify(state,null,2), "application/json");
+  toast("Backup downloaded");
+}
+function exportCSV(){
+  const rows = [["Date","Type","Amount","Category","Sub-category","Details","Notes","Mode","Card","Payment details","Bank","Affects balance"]];
+  state.txns.slice().sort((a,b) => a.date.localeCompare(b.date)).forEach(t => rows.push([
+    t.date, t.type, t.amount, t.cat, t.sub||"", t.otherDetail||"", t.notes||"", t.mode, t.card||"", t.modeDetail||"",
+    acctName(t.account), affectsBank(t) ? "Yes" : "No"
+  ]));
+  const csv = rows.map(r => r.map(v => `"${String(v).replace(/"/g,'""')}"`).join(",")).join("\n");
+  download(`expenses-${toISO(new Date())}.csv`, csv, "text/csv");
+  toast("CSV downloaded");
+}
+function importJSON(file){
+  const fr = new FileReader();
+  fr.onload = () => {
+    try{
+      const s = JSON.parse(fr.result);
+      if(!Array.isArray(s.txns)) throw new Error("bad file");
+      localStorage.setItem(DB_KEY, JSON.stringify(s));
+      state = load();
+      save(); renderAll(); renderAddView();
+      toast(`Imported ${state.txns.length} entries`);
+    }catch(e){ toast("That file isn't a valid backup"); }
+  };
+  fr.readAsText(file);
+}
+
+/* ---------- J. WIRING & BOOT ---------------------------------------- */
+
+function renderAll(){
+  $("#hdrBalance").textContent = money(totalBalance());
+  renderHistory(); renderSummary(); renderSettings();
+}
+function switchView(v){
+  $$(".view").forEach(s => s.classList.toggle("is-active", s.id === "view-" + v));
+  $$("#tabbar button").forEach(b => b.classList.toggle("is-on", b.dataset.view === v));
+  const titles = {add:form.type === "income" ? "Log money in" : "Add expense", history:"History", summary:"Summary", settings:"Settings"};
+  $("#pageTitle").textContent = titles[v];
+  window.scrollTo({top:0, behavior:"instant"});
+}
+
+$("#tabbar").addEventListener("click", e => {
+  const b = e.target.closest("button[data-view]"); if(b) switchView(b.dataset.view);
+});
+
+// add view
+$("#typeSeg").addEventListener("click", e => {
+  const b = e.target.closest("button[data-type]"); if(!b) return;
+  form.type = b.dataset.type; form.cat = ""; form.sub = "";
+  $("#fCategory").value = ""; $("#fSub").value = "";
+  $$("#typeSeg button").forEach(x => x.classList.toggle("is-on", x === b));
+  renderAddView();
+});
+$("#catChips").addEventListener("click", e => {
+  const b = e.target.closest("[data-cat]"); if(!b) return;
+  form.cat = b.dataset.cat; form.sub = "";
+  $("#fCategory").value = form.cat; $("#fSub").value = "";
+  renderAddView();
+});
+$("#subChips").addEventListener("click", e => {
+  const b = e.target.closest("[data-sub]"); if(!b) return;
+  form.sub = b.dataset.sub; $("#fSub").value = form.sub; renderAddView();
+});
+$("#cardChips").addEventListener("click", e => {
+  const b = e.target.closest("[data-card]"); if(!b) return;
+  form.card = b.dataset.card; renderAddView();
+});
+$("#addCardBtn").addEventListener("click", () => {
+  const c = $("#newCard").value.trim();
+  if(!c) return toast("Type a card name");
+  if(state.cards.includes(c)) return toast("That card already exists");
+  state.cards.push(c); $("#newCard").value = "";
+  save(); renderAll(); renderAddView(); toast("Card added");
+});
+$("#cardList").addEventListener("click", e => {
+  const b = e.target.closest("[data-delcard]"); if(!b) return;
+  const c = b.dataset.delcard;
+  const used = state.txns.filter(t => t.card === c).length;
+  if(used && !confirm(`${used} ${used===1?"entry uses":"entries use"} ${c}. Remove it anyway? Those entries keep the card name.`)) return;
+  state.cards = state.cards.filter(x => x !== c);
+  if(form.card === c) form.card = "";
+  save(); renderAll(); renderAddView(); toast("Card removed");
+});
+$("#modeChips").addEventListener("click", e => {
+  const b = e.target.closest("[data-mode]"); if(!b) return;
+  form.mode = b.dataset.mode; renderAddView();
+});
+$("#fCategory").addEventListener("input", e => {
+  form.cat = e.target.value.trim();
+  if(!subsFor(form.cat).includes(form.sub)) { form.sub = ""; $("#fSub").value = ""; }
+  renderAddView();
+});
+$("#fSub").addEventListener("input", e => { form.sub = e.target.value.trim(); renderAddView(); });
+$("#fNotes").addEventListener("input", e => {
+  const s = suggestFrom(e.target.value, form.type);
+  const box = $("#suggestBox");
+  if(s && (s[0] !== form.cat || s[1] !== form.sub)){
+    box.style.display = "block";
+    box.innerHTML = `Looks like <strong>${esc(s[0])} › ${esc(s[1])}</strong> —
+      <button class="btn ghost sm" data-usecat="${esc(s[0])}" data-usesub="${esc(s[1])}" style="padding:4px 10px">Use it</button>`;
+  } else box.style.display = "none";
+});
+$("#suggestBox").addEventListener("click", e => {
+  const b = e.target.closest("[data-usecat]"); if(!b) return;
+  form.cat = b.dataset.usecat; form.sub = b.dataset.usesub;
+  $("#fCategory").value = form.cat; $("#fSub").value = form.sub;
+  $("#suggestBox").style.display = "none"; renderAddView();
+});
+$("#fBankEffect").addEventListener("change", renderAddView);
+$("#saveBtn").addEventListener("click", saveEntry);
+$("#fAmount").addEventListener("keydown", e => { if(e.key === "Enter") saveEntry(); });
+
+// history
+["#qSearch","#qCategory","#qSub","#qMode","#qRange"].forEach(sel => {
+  $(sel).addEventListener("input", renderHistory);
+  $(sel).addEventListener("change", renderHistory);
+});
+$("#qCategory").addEventListener("change", () => { $("#qSub").value = "all"; renderHistory(); });
+$("#txnTable").addEventListener("click", e => {
+  const b = e.target.closest("[data-del]"); if(!b) return;
+  const t = state.txns.find(x => x.id === b.dataset.del); if(!t) return;
+  if(!confirm(`Delete this ${t.type} of ${money(t.amount)} on ${fmtDate(t.date)}?`)) return;
+  state.txns = state.txns.filter(x => x.id !== t.id);
+  save(); renderAll(); renderAddView(); toast("Entry deleted");
+});
+$("#csvBtn").addEventListener("click", exportCSV);
+
+// summary
+$("#periodSeg").addEventListener("click", e => {
+  const b = e.target.closest("button[data-p]"); if(!b) return;
+  ui.period = b.dataset.p; ui.anchor = new Date();
+  $$("#periodSeg button").forEach(x => x.classList.toggle("is-on", x === b));
+  renderSummary();
+});
+$("#levelSeg").addEventListener("click", e => {
+  const b = e.target.closest("button[data-l]"); if(!b) return;
+  ui.level = b.dataset.l;
+  $$("#levelSeg button").forEach(x => x.classList.toggle("is-on", x === b));
+  renderSummary();
+});
+$("#prevP").addEventListener("click", () => { shiftAnchor(-1); renderSummary(); });
+$("#nextP").addEventListener("click", () => { shiftAnchor(1); renderSummary(); });
+
+// settings
+$("#addAcctBtn").addEventListener("click", () => {
+  const name = $("#newAcctName").value.trim();
+  const bal = parseFloat($("#newAcctBal").value) || 0;
+  if(!name) return toast("Give the account a name");
+  state.accounts.push({id:uid(), name, baseline:bal, baselineAt:Date.now()});
+  $("#newAcctName").value = ""; $("#newAcctBal").value = "";
+  save(); renderAll(); renderAddView(); toast("Account added");
+});
+$("#acctList").addEventListener("click", e => {
+  const edit = e.target.closest("[data-editbal]");
+  if(edit){
+    const a = state.accounts.find(x => x.id === edit.dataset.editbal);
+    const v = prompt(`Current balance for ${a.name}`, accountBalance(a));
+    if(v === null) return;
+    const n = parseFloat(v);
+    if(isNaN(n)) return toast("Enter a number");
+    a.baseline = n; a.baselineAt = Date.now();
+    save(); renderAll(); renderAddView(); toast("Balance updated");
+    return;
+  }
+  const del = e.target.closest("[data-delacct]");
+  if(del){
+    const a = state.accounts.find(x => x.id === del.dataset.delacct);
+    if(!confirm(`Remove ${a.name}? Entries stay, but lose their bank link.`)) return;
+    state.accounts = state.accounts.filter(x => x.id !== a.id);
+    state.txns.forEach(t => { if(t.account === a.id) t.account = ""; });
+    save(); renderAll(); renderAddView(); toast("Account removed");
+  }
+});
+$("#addSubBtn").addEventListener("click", () => {
+  const parent = $("#newSubParent").value;
+  const s = $("#newSub").value.trim();
+  if(!s) return toast("Type a sub-category name");
+  if(subsFor(parent).includes(s)) return toast("That sub-category already exists");
+  state.customSubs[parent] = state.customSubs[parent] || [];
+  state.customSubs[parent].push(s);
+  $("#newSub").value = "";
+  save(); renderSettings(); renderAddView(); toast(`Added to ${parent}`);
+});
+$("#customSubs").addEventListener("click", e => {
+  const b = e.target.closest("[data-delsub]"); if(!b) return;
+  const [cat, s] = b.dataset.delsub.split("|");
+  state.customSubs[cat] = (state.customSubs[cat] || []).filter(x => x !== s);
+  if(!state.customSubs[cat].length) delete state.customSubs[cat];
+  save(); renderSettings(); renderAddView();
+});
+$("#exportBtn").addEventListener("click", exportJSON);
+$("#csvBtn2").addEventListener("click", exportCSV);
+$("#importBtn").addEventListener("click", () => $("#importFile").click());
+$("#importFile").addEventListener("change", e => { if(e.target.files[0]) importJSON(e.target.files[0]); e.target.value = ""; });
+$("#wipeBtn").addEventListener("click", () => {
+  if(!confirm("Delete every entry, account and custom sub-category from this browser?")) return;
+  if(!confirm("Last check — this cannot be undone. Delete everything?")) return;
+  state = blank(); save(); renderAll(); renderAddView(); toast("All data deleted");
+});
+
+/* Logo, embedded so the file stays self-contained offline. */
+const LOGO = "data:image/png;base64,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";
+$("#brandLogo").src = LOGO;
+
+// deep links from the app shortcuts: index.html#summary etc.
+if(location.hash){
+  const v = location.hash.slice(1);
+  if(["add","history","summary","settings"].includes(v)) setTimeout(() => switchView(v), 0);
+}
+
+// boot
+$("#fDate").value = toISO(new Date());
+$("#fDate").max = toISO(new Date());
+renderAddView();
+renderAll();
+
+</script>
+</body>
+</html>
